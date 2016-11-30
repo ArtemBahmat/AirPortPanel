@@ -1,10 +1,7 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 
 namespace AirportPanel.Models
 {
-
-
     public enum FlightStatuses
     { CheckIn = 1, GateClosed, Arrived, Unknown, Canceled, Delayed, InFlight, Departed, Expected }
 
@@ -14,8 +11,8 @@ namespace AirportPanel.Models
 
     public class Flight
     {
-        public int Id { get; set; }
-        public int FlightNumber { get; set; }
+        public int FlightId { get; set; }
+        public int RunwayNumber { get; set; }
         public FlightDirections FlightDirection { get; set; }
         public FlightStatuses FlightStatus { get; set; }
         public DateTime DateAndTime { get; set; }
@@ -23,6 +20,5 @@ namespace AirportPanel.Models
         public string Airline { get; set; }
         public string Terminal { get; set; }
         public string Gate { get; set; }
-
     }
 }

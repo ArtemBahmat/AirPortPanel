@@ -2,9 +2,6 @@
 using ConsoleTables.Core;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AirportPanel
 {
@@ -12,67 +9,208 @@ namespace AirportPanel
     {
         public static void ShowMainMenu()
         {
-            int choice = 0;
+            int input = 0;
 
+            Console.Clear();
             Console.WriteLine("============ What do you want to do: ============");
             Console.WriteLine("1. View all the flights");
             Console.WriteLine("2. View the flight information about arrivals");
             Console.WriteLine("3. View the flight information about departures");
-            Console.WriteLine("4. Adding information");
-            Console.WriteLine("5. Deleting information");
-            Console.WriteLine("6. Editing information");
-            Console.WriteLine("7. Quit");
+            Console.WriteLine("4. Adding the flight");
+            Console.WriteLine("5. Deleting the flight");
+            Console.WriteLine("6. Editing  the flight");
+            Console.WriteLine("7. Searching for the flight");
+            Console.WriteLine("8. Show emergency message");
+            Console.WriteLine("9. Quit");
 
-            choice = GetIntegerNumberFromUser(6);
+            input = Validator.GetNumberFromConsole(9);
+            Console.Clear();
 
-            switch (choice)
+            switch (input)
             {
                 case 1:
-                    ShowFlightes(DBManager.GetAllFlightsFromDB());
+                    ShowFlights(DBManager.GetAllFlightsFromDB());
                     break;
                 case 2:
-                    ShowFlightesByDirection(FlightDirections.Arrival);
+                    ShowFlightsByDirection(FlightDirections.Arrival);
                     break;
                 case 3:
-                    ShowFlightesByDirection(FlightDirections.Departure);
+                    ShowFlightsByDirection(FlightDirections.Departure);
                     break;
                 case 4:
-                    AddData();
+                    AddFlight();
                     break;
                 case 5:
-                    DeleteData();
+                    DeleteFlight();
                     break;
                 case 6:
-                    EditData();
+                    EditFlight();
                     break;
                 case 7:
+                    FindFlight();
+                    break;
+                case 8:
+                    ShowEmergencyInfo();
+                    break;
+                case 9:
                     Environment.Exit(0);
                     break;
             }
 
-            ShowMainMenu();
+            ReturnToMenu();
         }
 
-        private static void EditData()
+
+        private static void ShowEmergencyInfo()
+        {
+            string msgEmergency = "============  EMERGENCY !!! PLEASE EVACUATE OFF THE BUILDNG !!! ============";
+
+            Console.Beep();
+            Console.BackgroundColor = ConsoleColor.Red;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.SetCursorPosition((Console.WindowWidth - msgEmergency.Length) / 2, Console.LargestWindowHeight / 2);
+            Console.WriteLine(msgEmergency);
+            Console.ReadLine();
+            Console.ResetColor();
+            ReturnToMenu();
+        }
+
+
+        private static void FindFlight()
+        {
+            int input = 0;
+            List<Flight> flights = new List<Flight>();
+
+            Console.WriteLine("============ Searching flight(s) ============");
+            Console.WriteLine("Select serching criterian:");
+            Console.WriteLine("1. Nearest flights");                    // multiple                   
+            Console.WriteLine("2. By flight number");                   // single
+            Console.WriteLine("3. By date and time of arrival");        // multiple
+            Console.WriteLine("4. By City Port");                       // multiple
+            Console.WriteLine("5. Return to main menu");
+            input = Validator.GetNumberFromConsole(5);
+
+            switch (input)
+            {
+                case 1:
+                    flights = GetFlightsByDateTime(true);
+                    break;
+                case 2:
+                    Flight flight = GetFlightByNumber();
+                    if (flight != null)
+                        flights.Add(flight);
+                    break;
+                case 3:
+                    flights = GetFlightsByDateTime();
+                    break;
+                case 4:
+                    flights = GetFlightsByCityPort();
+                    break;
+                case 5:
+                    ShowMainMenu();
+                    break;
+            }
+
+            if (flights.Count > 0)
+                ShowFlights(flights);
+            else
+                Console.WriteLine("Flight(es) was/were not found");
+        }
+
+
+        private static List<Flight> GetFlightsByCityPort()
+        {
+            Console.WriteLine("Enter City Port of the flight:");
+            string cityPort = Validator.GetStringFromConsole();
+            return DBManager.GetFlightsFromDB(cityPort);
+        }
+
+
+        private static List<Flight> GetFlightsByDateTime(bool isNearest = false)
+        {
+            List<Flight> result = new List<Flight>();
+            int extraHours;
+
+            Console.WriteLine("Enter date and time in format dd.MM.YYYY hh:mm");
+            DateTime date = Validator.GetDateTimeFromConsole();
+
+            if (isNearest)
+            {
+                Console.WriteLine("Enter number of extra hours from 1 till 12:");
+                extraHours = Validator.GetNumberFromConsole(12);
+                result = DBManager.GetFlightsFromDB(date, isNearest, extraHours);
+            }
+            else
+            {
+                result = DBManager.GetFlightsFromDB(date);
+            }
+
+            return result;
+        }
+
+
+        private static Flight GetFlightByNumber()
+        {
+            Console.WriteLine("Enter flight number:");
+            int number = Validator.GetNumberFromConsole();
+            return DBManager.GetFlightFromDB(number);
+        }
+
+
+        private static void EditFlight()
         {
             Console.Clear();
-            Console.WriteLine("============ What do you want to edit: ============");
+            Console.WriteLine("============ Editing flight ============");
             Console.WriteLine("Enter flight number of the flight you want to edit:");
 
-            int flightNumber = GetIntegerNumberFromUser();
+            int flightNumber = Validator.GetNumberFromConsole();
             Flight flight = DBManager.GetFlightFromDB(flightNumber);
 
             if (flight != null)
             {
-                Console.WriteLine("Flight direction:");
-                Console.Write(flight.FlightDirection);
-                flight.FlightDirection = GetIntegerNumberFromUser();
-                
-            }
+                Console.WriteLine("Number of runway:");
+                Console.WriteLine($"Current value: {flight.RunwayNumber}");
+                Console.WriteLine("New value:");
+                flight.RunwayNumber = Validator.GetNumberFromConsole();
 
+                Console.WriteLine("Flight status number (1 - CheckIn, 2 - GateClosed, 3 - Arrived, 4 - Unknown, 5 - Canceled, 6 - Delayed, 7 - InFlight, 8 - Departed, 9 - Expected)");
+                Console.WriteLine($"Current value: {flight.FlightStatus}");
+                Console.WriteLine("New value:");
+                flight.FlightStatus = (FlightStatuses)Validator.GetNumberFromConsole(9);
+
+                Console.WriteLine("Flight date and time:");
+                Console.WriteLine($"Current value: {flight.DateAndTime}");
+                Console.WriteLine("New value:");
+                flight.DateAndTime = Validator.GetDateTimeFromConsole();
+
+                Console.WriteLine("City port:");
+                Console.WriteLine($"Current value: {flight.CityPort}");
+                Console.WriteLine("New value:");
+                flight.CityPort = Validator.GetStringFromConsole();
+
+                Console.WriteLine("Airline:");
+                Console.WriteLine($"Current value: {flight.Airline}");
+                Console.WriteLine("New value:");
+                flight.Airline = Validator.GetStringFromConsole();
+
+                Console.WriteLine("Terminal:");
+                Console.WriteLine($"Current value: {flight.Terminal}");
+                Console.WriteLine("New value:");
+                flight.Terminal = Validator.GetStringFromConsole();
+
+                Console.WriteLine("Gate:");
+                Console.WriteLine($"Current value: {flight.Gate}");
+                Console.WriteLine("New value:");
+                flight.Gate = Validator.GetStringFromConsole();
+
+                DBManager.UpdateFlightToDB(flight);
+            }
+            else
+                Console.WriteLine("The flight with such number wasn't found");
         }
 
-        private static void AddData()
+
+        private static void AddFlight()
         {
             Console.Clear();
             Console.WriteLine("============ What do you want to add: ============");
@@ -80,32 +218,33 @@ namespace AirportPanel
             Console.WriteLine("2. Adding data to departures");
             Console.WriteLine("3. Return to main menu");
 
-            switch (GetIntegerNumberFromUser(3))
+            switch (Validator.GetNumberFromConsole(3))
             {
                 case 1:
                     Console.Clear();
-                    Console.WriteLine("Adding data to arrivals");
-                    GetFlightFromUser(FlightDirections.Arrival);
+                    Console.WriteLine("=========== Adding data to arrivals ===========");
+                    GetFlightDataFromUser(FlightDirections.Arrival);
                     break;
                 case 2:
                     Console.Clear();
-                    Console.WriteLine("Adding data to departures");
-                    GetFlightFromUser(FlightDirections.Departure);
+                    Console.WriteLine("=========== Adding data to departures ===========");
+                    GetFlightDataFromUser(FlightDirections.Departure);
                     break;
                 case 3:
-                    GoHome();
+                    Console.Clear();
+                    ShowMainMenu();
                     break;
             }
         }
 
 
-        private static void DeleteData()
+        private static void DeleteFlight()
         {
             Console.Clear();
             Console.WriteLine("============ What do you want to delete: ============");
             Console.WriteLine("Enter flight number of the flight you want to delete:");
 
-            int flightNumber = GetIntegerNumberFromUser();
+            int flightNumber = Validator.GetNumberFromConsole();
             Flight flight = DBManager.GetFlightFromDB(flightNumber);
 
             if (flight != null)
@@ -113,139 +252,85 @@ namespace AirportPanel
                 Console.WriteLine("You want to delete this row:");
                 ShowFlight(flight);
                 Console.WriteLine("Are you sure for deleting? 1 - YES, 2 - NO");
-                int choice = GetIntegerNumberFromUser(2);
+                int input = Validator.GetNumberFromConsole(2);
 
-                if (choice == 1)
+                if (input == 1)
                     DBManager.DeleteFlightFromDB(flight);
                 else
-                    Console.WriteLine("Deleting cancelled. Press any key to go to main menu.");
+                    Console.WriteLine("Deleting cancelled");
             }
             else
-                Console.WriteLine("Flight with such number was not found. Press any key to go to main menu.");
+                Console.WriteLine("Flight with such number was not found");
 
-
-            Console.ReadLine();
-            GoHome();
-
+            ReturnToMenu();
         }
 
 
-
-
-
-
-
-        private static void GetFlightFromUser(FlightDirections direction)
+        private static void GetFlightDataFromUser(FlightDirections direction)
         {
-            Flight flight = new Flight();
+            Flight flight = new Flight() {  FlightDirection = direction};            
 
-            flight.FlightDirection = direction;
-
-            Console.WriteLine("Enter flight number:");
-            flight.FlightNumber = GetIntegerNumberFromUser();
+            Console.WriteLine("Enter number of runway:");
+            flight.RunwayNumber = Validator.GetNumberFromConsole();
 
             Console.WriteLine("Enter name of city port:");
-            flight.CityPort = Console.ReadLine();
+            flight.CityPort = Validator.GetStringFromConsole();
 
             Console.WriteLine("Enter name of airline:");
-            flight.Airline = Console.ReadLine();
+            flight.Airline = Validator.GetStringFromConsole();
 
             Console.WriteLine("Enter name of terminal:");
-            flight.Terminal = Console.ReadLine();
+            flight.Terminal = Validator.GetStringFromConsole();
 
             Console.WriteLine("Enter name of gate:");
-            flight.Gate = Console.ReadLine();
+            flight.Gate = Validator.GetStringFromConsole();
 
-            Console.WriteLine("Enter date and time in such format: 01.01.2016 13:30");
-            flight.DateAndTime = GetDateFromUser();
+            Console.WriteLine("Enter date and time in such format: dd.MM.YYYY hh:mm");
+            flight.DateAndTime = Validator.GetDateTimeFromConsole();
 
-            Console.WriteLine("Enter flight status number (1 = CheckIn, 2 = GateClosed, 3 = Arrived, 4 = Unknown, 5 = Canceled, 6 = Delayed, 7 = InFlight, 8 = Departed, 9 = Expected)");
-            flight.FlightStatus = (FlightStatuses)GetIntegerNumberFromUser(9);
+            Console.WriteLine("Enter flight status number (1 - CheckIn, 2 - GateClosed, 3 - Arrived, 4 - Unknown, 5 - Canceled, 6 - Delayed, 7 - InFlight, 8 - Departed, 9 - Expected)");
+            flight.FlightStatus = (FlightStatuses)Validator.GetNumberFromConsole(9);
 
             DBManager.SaveFlightToDB(flight);
+            ReturnToMenu();
+        }
 
+
+        private static void ReturnToMenu()
+        {
+            Console.WriteLine("Press any key to go to main menu");
             Console.ReadLine();
-            GoHome();
-        }
-
-
-
-        private static int GetIntegerNumberFromUser(int limit = 0)
-        {
-            int value = 0;
-            int startIndex = 1;
-            bool isDigit = false;
-            bool validInput = false;
-
-            do
-            {
-                isDigit = int.TryParse(Console.ReadLine(), out value);
-                validInput = (isDigit && limit != 0) ? IsCorrectInput(value, startIndex, limit) : isDigit;
-
-            }
-            while (!validInput);
-
-            return value;
-        }
-
-
-        private static bool IsCorrectInput(int input, int startNumber, int endNumber)
-        {
-            return input != 0 && input <= endNumber && input >= startNumber;
-        }
-
-
-        private static DateTime GetDateFromUser()
-        {
-            DateTime date;
-            bool isDate = false;
-
-            do
-            {
-                isDate = DateTime.TryParse(Console.ReadLine(), out date);
-            }
-            while (!isDate);
-
-            return date;
-        }
-
-
-
-        private static void GoHome()
-        {
-            Console.Clear();
             ShowMainMenu();
         }
 
-        private static void ShowFlightesByDirection(FlightDirections direction)
+
+        private static void ShowFlightsByDirection(FlightDirections direction)
         {
-            List<Flight> flightes = DBManager.GetFlightsFromDB(direction);
-            ConsoleTable.From<Flight>(flightes).Write();
+            Console.Clear();
+            List<Flight> flights = DBManager.GetFlightsFromDB(direction);
+            ShowFlights(flights);
+            ReturnToMenu();
         }
 
-        private static void ShowFlightes(List<Flight> flightes)
+
+        private static void ShowFlights(List<Flight> flights)
         {
-            ConsoleTable.From<Flight>(flightes).Write();
+            if (flights != null && flights.Count > 0)
+            {
+                ConsoleTable.From<Flight>(flights).Write();
+            }                      
         }
 
 
         private static void ShowFlight(Flight flight)
-        {
-            List<Flight> flightes = new List<Flight>();
-
+        {            
             if (flight != null)
             {
-                flightes.Add(flight);
-                ShowFlightes(flightes);
+                List<Flight> flights = new List<Flight>() { flight };               
+                ShowFlights(flights);
             }
             else
                 Console.WriteLine("Such flight was not found");
-        }
-
-
-
-
-
-
+        }        
     }
 }

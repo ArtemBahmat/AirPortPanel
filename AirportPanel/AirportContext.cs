@@ -9,6 +9,6 @@ namespace AirportPanel
             : base("DBConnectionAirport")
         { }
 
-        public DbSet<Flight> Flightes { get; set; }
+        public DbSet<Flight> Flights { get; set; }
     }
 }
