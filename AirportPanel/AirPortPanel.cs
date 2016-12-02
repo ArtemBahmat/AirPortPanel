@@ -2,62 +2,73 @@
 using ConsoleTables.Core;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AirportPanel
 {
-    static class BusinessLogic
+    static class AirPortPanel
     {
         public static void ShowMainMenu()
         {
             int input = 0;
+            bool toExit = false;
 
-            Console.Clear();
-            Console.WriteLine("============ What do you want to do: ============");
-            Console.WriteLine("1. View all the flights");
-            Console.WriteLine("2. View the flight information about arrivals");
-            Console.WriteLine("3. View the flight information about departures");
-            Console.WriteLine("4. Adding the flight");
-            Console.WriteLine("5. Deleting the flight");
-            Console.WriteLine("6. Editing  the flight");
-            Console.WriteLine("7. Searching for the flight");
-            Console.WriteLine("8. Show emergency message");
-            Console.WriteLine("9. Quit");
-
-            input = Validator.GetNumberFromConsole(9);
-            Console.Clear();
-
-            switch (input)
+            while (!toExit)
             {
-                case 1:
-                    ShowFlights(DBManager.GetAllFlightsFromDB());
-                    break;
-                case 2:
-                    ShowFlightsByDirection(FlightDirections.Arrival);
-                    break;
-                case 3:
-                    ShowFlightsByDirection(FlightDirections.Departure);
-                    break;
-                case 4:
-                    AddFlight();
-                    break;
-                case 5:
-                    DeleteFlight();
-                    break;
-                case 6:
-                    EditFlight();
-                    break;
-                case 7:
-                    FindFlight();
-                    break;
-                case 8:
-                    ShowEmergencyInfo();
-                    break;
-                case 9:
-                    Environment.Exit(0);
-                    break;
-            }
+                Console.Clear();
+                Console.WriteLine("============ What do you want to do: ============");
+                Console.WriteLine("1. View all the flights");
+                Console.WriteLine("2. View the flight information about arrivals");
+                Console.WriteLine("3. View the flight information about departures");
+                Console.WriteLine("4. Adding the flight");
+                Console.WriteLine("5. Deleting the flight");
+                Console.WriteLine("6. Editing  the flight");
+                Console.WriteLine("7. Searching for the flight");
+                Console.WriteLine("8. Show emergency message");
+                Console.WriteLine("9. Quit");
 
-            ReturnToMenu();
+                input = Validator.GetNumberFromConsole(9);
+                Console.Clear();
+
+                switch (input)
+                {
+                    case 1:
+                        ShowFlights(DBManager.GetAllFlightsFromDB());
+                        break;
+                    case 2:
+                        ShowFlightsByDirection(FlightDirections.Arrival);
+                        break;
+                    case 3:
+                        ShowFlightsByDirection(FlightDirections.Departure);
+                        break;
+                    case 4:
+                        AddFlight();
+                        break;
+                    case 5:
+                        DeleteFlight();
+                        break;
+                    case 6:
+                        EditFlight();
+                        break;
+                    case 7:
+                        FindFlight();
+                        break;
+                    case 8:
+                        ShowEmergencyInfo();
+                        break;
+                    case 9:
+                        toExit = true;
+                        break;
+                }
+                PauseConsole();
+            }
+        }
+
+
+        private static void PauseConsole()
+        {
+            Console.WriteLine("Press any key to continue");
+            Console.ReadLine();
         }
 
 
@@ -72,7 +83,6 @@ namespace AirportPanel
             Console.WriteLine(msgEmergency);
             Console.ReadLine();
             Console.ResetColor();
-            ReturnToMenu();
         }
 
 
@@ -107,14 +117,17 @@ namespace AirportPanel
                     flights = GetFlightsByCityPort();
                     break;
                 case 5:
-                    ShowMainMenu();
-                    break;
+                    return;
             }
 
             if (flights.Count > 0)
+            {
                 ShowFlights(flights);
+            }
             else
+            {
                 Console.WriteLine("Flight(es) was/were not found");
+            }
         }
 
 
@@ -206,7 +219,9 @@ namespace AirportPanel
                 DBManager.UpdateFlightToDB(flight);
             }
             else
+            {
                 Console.WriteLine("The flight with such number wasn't found");
+            }
         }
 
 
@@ -217,22 +232,20 @@ namespace AirportPanel
             Console.WriteLine("1. Adding data to arrivals");
             Console.WriteLine("2. Adding data to departures");
             Console.WriteLine("3. Return to main menu");
+            int input = Validator.GetNumberFromConsole(3);
+            Console.Clear();
 
-            switch (Validator.GetNumberFromConsole(3))
+            switch (input)
             {
                 case 1:
-                    Console.Clear();
                     Console.WriteLine("=========== Adding data to arrivals ===========");
                     GetFlightDataFromUser(FlightDirections.Arrival);
                     break;
                 case 2:
-                    Console.Clear();
                     Console.WriteLine("=========== Adding data to departures ===========");
                     GetFlightDataFromUser(FlightDirections.Departure);
                     break;
                 case 3:
-                    Console.Clear();
-                    ShowMainMenu();
                     break;
             }
         }
@@ -250,19 +263,23 @@ namespace AirportPanel
             if (flight != null)
             {
                 Console.WriteLine("You want to delete this row:");
-                ShowFlight(flight);
+                ShowFlights(flight);
                 Console.WriteLine("Are you sure for deleting? 1 - YES, 2 - NO");
                 int input = Validator.GetNumberFromConsole(2);
 
                 if (input == 1)
+                {
                     DBManager.DeleteFlightFromDB(flight);
+                }
                 else
+                {
                     Console.WriteLine("Deleting cancelled");
+                }
             }
             else
+            {
                 Console.WriteLine("Flight with such number was not found");
-
-            ReturnToMenu();
+            }
         }
 
 
@@ -292,15 +309,6 @@ namespace AirportPanel
             flight.FlightStatus = (FlightStatuses)Validator.GetNumberFromConsole(9);
 
             DBManager.SaveFlightToDB(flight);
-            ReturnToMenu();
-        }
-
-
-        private static void ReturnToMenu()
-        {
-            Console.WriteLine("Press any key to go to main menu");
-            Console.ReadLine();
-            ShowMainMenu();
         }
 
 
@@ -309,7 +317,6 @@ namespace AirportPanel
             Console.Clear();
             List<Flight> flights = DBManager.GetFlightsFromDB(direction);
             ShowFlights(flights);
-            ReturnToMenu();
         }
 
 
@@ -322,15 +329,9 @@ namespace AirportPanel
         }
 
 
-        private static void ShowFlight(Flight flight)
-        {            
-            if (flight != null)
-            {
-                List<Flight> flights = new List<Flight>() { flight };               
-                ShowFlights(flights);
-            }
-            else
-                Console.WriteLine("Such flight was not found");
-        }        
+        private static void ShowFlights(params Flight[] flights)
+        {          
+            ShowFlights(flights.OfType<Flight>().ToList());
+        }    
     }
 }

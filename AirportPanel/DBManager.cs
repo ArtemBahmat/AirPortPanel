@@ -9,12 +9,25 @@ using System.Linq;
 namespace AirportPanel
 {
     static class DBManager
-    {
-        static Type ThisType = typeof(DBManager);   
-        static readonly string msgSavedSuccess = "Data was saved to DB successfully. ";
-        static readonly string msgDBCreatedSuccess = "DB was created successfully. ";
-        static readonly string msgDeletedSuccess = "Data was deleted successfully. ";
-        static readonly string msgError = "Error proceeding. ";
+    { 
+        static readonly string msgSavedSuccess = "Data was saved to DB successfully.";
+        static readonly string msgDBCreatedSuccess = "DB was created successfully.";
+        static readonly string msgDeletedSuccess = "Data was deleted successfully.";
+        static readonly string msgError = "Error proceeding.";
+
+
+        static DBManager()
+        {
+            string pathToDB = GetPathToDB();
+            AppDomain.CurrentDomain.SetData("DataDirectory", pathToDB);
+            string fullPathToDB = pathToDB + "\\" + GetDBName();
+
+            if (!File.Exists(fullPathToDB))
+            {
+                InitDB(fullPathToDB);
+            }
+        }
+
 
         public static void SaveFlightToDB(Flight flight)
         {
@@ -28,13 +41,11 @@ namespace AirportPanel
                         db.SaveChanges();
                     }
 
-                    Console.WriteLine(msgSavedSuccess);
-                    Log.For(ThisType).Info(msgSavedSuccess);
+                    Log.Info(msgSavedSuccess);
                 }
                 catch (Exception ex)
-                {
-                    Console.WriteLine(msgError);
-                    Log.For(ThisType).Error(ex);
+                {                     
+                    Log.Error(msgError, ex);
                 }
             }
         }
@@ -50,13 +61,11 @@ namespace AirportPanel
                     db.SaveChanges();
                 }
 
-                Console.WriteLine(msgSavedSuccess);
-                Log.For(ThisType).Info(msgSavedSuccess);
+                Log.Info(msgSavedSuccess);           
             }
             catch (Exception ex)
             {
-                Console.WriteLine(msgError);
-                Log.For(ThisType).Error(ex);
+                Log.Error(msgError, ex);
             }
         }
 
@@ -74,13 +83,11 @@ namespace AirportPanel
                         db.SaveChanges();
                     }
 
-                    Console.WriteLine(msgSavedSuccess);
-                    Log.For(ThisType).Info(msgSavedSuccess);
+                    Log.Info(msgSavedSuccess);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(msgError);
-                    Log.For(ThisType).Error(ex);
+                    Log.Error(msgError, ex);
                 }
             }
         }
@@ -103,13 +110,11 @@ namespace AirportPanel
                         db.SaveChanges();
                     }
 
-                    Console.WriteLine(msgDeletedSuccess);
-                    Log.For(ThisType).Info(msgDeletedSuccess);
+                    Log.Info(msgDeletedSuccess);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(msgError);
-                    Log.For(ThisType).Error(ex);
+                    Log.Error(msgError, ex);
                 }
             }
         }
@@ -125,16 +130,14 @@ namespace AirportPanel
                 {
                     db.Configuration.AutoDetectChangesEnabled = false;
 
-                    flightes = db.Flights.Select(f => f)
-                                         .Where(f => f.FlightDirection == arrival)
+                    flightes = db.Flights.Where(f => f.FlightDirection == arrival)
                                          .OrderBy(f => f.DateAndTime)
                                          .ToList();
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(msgError);
-                Log.For(ThisType).Error(ex);
+                Log.Error(msgError, ex);
             }
 
             return flightes;
@@ -170,15 +173,14 @@ namespace AirportPanel
             }
             catch (Exception ex)
             {
-                Console.WriteLine(msgError);
-                Log.For(ThisType).Error(ex);
+                Log.Error(msgError, ex);
             }
 
             return flights;
         }
 
 
-        internal static List<Flight> GetFlightsFromDB(string cityPort)
+        public static List<Flight> GetFlightsFromDB(string cityPort)
         {
             List<Flight> flightes = new List<Flight>();
 
@@ -197,8 +199,7 @@ namespace AirportPanel
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(msgError);
-                    Log.For(ThisType).Error(ex);
+                    Log.Error(msgError, ex);
                 }
             }
 
@@ -216,13 +217,12 @@ namespace AirportPanel
                 {
                     db.Configuration.AutoDetectChangesEnabled = false;
 
-                    flightes = db.Flights.Select(f => f).ToList();
+                    flightes = db.Flights.ToList();
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(msgError);
-                Log.For(ThisType).Error(ex);
+                Log.Error(msgError, ex);
             }
 
             return flightes;
@@ -244,15 +244,14 @@ namespace AirportPanel
             }
             catch (Exception ex)
             {
-                Console.WriteLine(msgError);
-                Log.For(ThisType).Error(ex);
+                Log.Error(msgError, ex);
             }
 
             return flight;
         }
 
 
-        public static void InitDB(string pathToDB)
+        private static void InitDB(string pathToDB)
         {
             List<Flight> flightes = new List<Flight>();
 
@@ -330,23 +329,21 @@ namespace AirportPanel
                     Gate = "Some Gate № 13"
                 });
 
-                DBManager.SaveFlightesToDB(flightes);
+                SaveFlightesToDB(flightes);
             }
 
             if (File.Exists(pathToDB))
             {
-                Console.WriteLine(msgDBCreatedSuccess);
-                Log.For(ThisType).Info(msgDBCreatedSuccess);
+                Log.Info(msgDBCreatedSuccess);
             }
             else
             {
-                Console.WriteLine(msgError);
-                Log.For(ThisType).Error(msgDBCreatedSuccess);
+                Log.Error(msgError);
             }
         }
 
 
-        public static string GetConnectionString()
+        private static string GetConnectionString()
         {
             string connectionString = string.Empty;
 
@@ -359,7 +356,7 @@ namespace AirportPanel
         }
 
 
-        public static string GetPathToDB()
+        private static string GetPathToDB()
         {
             string relative = @"..\..\App_Data";
             string absolute = Path.GetFullPath(relative);
@@ -367,20 +364,13 @@ namespace AirportPanel
         }
 
 
-        public static string GetDBName()
+        private static string GetDBName()
         {
             string connectionString = GetConnectionString();
             int startIndex = connectionString.LastIndexOf("\\");
             int endIndex = connectionString.LastIndexOf("'") - 1;
             string fileName = connectionString.Substring(startIndex + 1, endIndex - startIndex);
             return fileName;
-        }
-
-
-        public static void SetAppDataDirectory()
-        {
-            string pathToDB = GetPathToDB();
-            AppDomain.CurrentDomain.SetData("DataDirectory", pathToDB);
         }
     }
 }

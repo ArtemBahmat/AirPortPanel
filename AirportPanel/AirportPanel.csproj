@@ -75,7 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AirportContext.cs" />
-    <Compile Include="BusinessLogic.cs" />
+    <Compile Include="AirPortPanel.cs" />
     <Compile Include="DBManager.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Models\Flight.cs" />

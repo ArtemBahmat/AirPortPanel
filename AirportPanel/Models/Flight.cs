@@ -3,11 +3,25 @@
 namespace AirportPanel.Models
 {
     public enum FlightStatuses
-    { CheckIn = 1, GateClosed, Arrived, Unknown, Canceled, Delayed, InFlight, Departed, Expected }
+    {
+        CheckIn = 1,
+        GateClosed,
+        Arrived,
+        Unknown,
+        Canceled,
+        Delayed,
+        InFlight,
+        Departed,
+        Expected
+    }
 
 
     public enum FlightDirections
-    { Arrival = 1, Departure}
+    {
+        Arrival = 1,
+        Departure
+    }
+
 
     public class Flight
     {
